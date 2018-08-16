@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+    <bean id="casConfig" class="org.pac4j.cas.config.CasConfiguration">
+        <property name="loginUrl" value="http://localhost:8080/login.html"/>
+        <property name="prefixUrl" value="http://localhost:8080/test"/>
+        <property name="logoutHandler" ref="casLogoutHandler"/>
+    </bean>
+
+    <bean id="casLogoutHandler" class="com.study.shiro.client.handler.ShiroCasLogoutHandler">
+        <property name="destroySession" value="true"/>
+    </bean>
+
+    <bean id="casClient" class="com.study.shiro.client.MyCasClient">
+        <constructor-arg ref="casConfig"/>
+        <property name="includeClientNameInCallbackUrl" value="false"></property>
+        <!-- 客户端回调地址 -->
+        <property name="callbackUrl" value="http://localhost:8080/callback?client_name=MyCasClient"></property>
+    </bean>
+
+    <!--<bean id="sessionStore" class="com.study.shiro.client.session.ShiroSessionStore"></bean>-->
+    <bean id="sessionStore" class="io.buji.pac4j.context.ShiroSessionStore"></bean>
+
+    <!-- pac4j配置 -->
+    <bean id="authcConfig" class="org.pac4j.core.config.Config">
+        <constructor-arg ref="casClient"></constructor-arg>
+        <property name="sessionStore" ref="sessionStore"></property>
+    </bean>
+
+
+    <!-- shiro configurations -->
+
+    <bean id="sessionIdGenerator"
+          class="org.apache.shiro.session.mgt.eis.JavaUuidSessionIdGenerator"/>
+
+    <bean id="sessionIdCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+        <constructor-arg value="sid"/>
+        <property name="httpOnly" value="false"/>
+        <property name="maxAge" value="180000"/>
+        <property name="path" value="/"/>
+    </bean>
+
+    <bean id="sessionDAO"
+          class="org.apache.shiro.session.mgt.eis.MemorySessionDAO">
+        <property name="sessionIdGenerator" ref="sessionIdGenerator"/>
+    </bean>
+
+    <bean id="sessionValidationScheduler"
+          class="org.apache.shiro.session.mgt.quartz.QuartzSessionValidationScheduler">
+        <property name="sessionValidationInterval" value="1800000"/>
+        <property name="sessionManager" ref="sessionManager"/>
+    </bean>
+
+    <bean id="sessionManager" class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager">
+        <property name="globalSessionTimeout" value="1800000"/>
+        <property name="deleteInvalidSessions" value="true"/>
+        <property name="sessionValidationSchedulerEnabled" value="true"/>
+        <property name="sessionValidationScheduler" ref="sessionValidationScheduler"/>
+        <property name="sessionDAO" ref="sessionDAO"/>
+        <property name="sessionIdCookieEnabled" value="true"/>
+        <property name="sessionIdCookie" ref="sessionIdCookie"/>
+    </bean>
+
+    <bean id="cacheManager" class="com.study.shiro.server.cache.RedisCacheManager"></bean>
+
+    <!-- 基于pac4j的Subject工厂 -->
+    <bean id="pac4jSubjectFactory" class="io.buji.pac4j.subject.Pac4jSubjectFactory"></bean>
+
+    <!-- 安全管理器 -->
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <property name="realm">
+            <bean class="io.buji.pac4j.realm.Pac4jRealm">
+                <property name="cachingEnabled" value="false"/>
+                <property name="authenticationCachingEnabled" value="false"/>
+                <property name="authenticationCacheName" value="authenticationCache"/>
+                <property name="authorizationCachingEnabled" value="false"/>
+                <property name="authorizationCacheName" value="authorizationCache"/>
+            </bean>
+        </property>
+
+        <property name="subjectFactory" ref="pac4jSubjectFactory"></property>
+    </bean>
+
+    <bean id="roleOrFilter" class="com.study.shiro.server.filter.CustomRolesAuthorizationFilter"/>
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <property name="securityManager" ref="securityManager"></property>
+        <property name="filters">
+            <util:map>
+                <!-- 配置SecurityFilter，用于拦截受保护的url -->
+                <entry key="casSecurityFilter">
+                    <bean class="io.buji.pac4j.filter.SecurityFilter">
+                        <property name="config" ref="authcConfig"></property>
+                        <property name="clients" value="MyCasClient"></property>
+                    </bean>
+                </entry>
+                <!-- 回调过滤器，完成ticket认证 -->
+                <entry key="callback">
+                    <bean class="io.buji.pac4j.filter.CallbackFilter">
+                        <property name="config" ref="authcConfig"></property>
+                        <property name="defaultUrl" value="http://localhost:8080/test/index"></property>
+                    </bean>
+                </entry>
+                <!-- 登出过滤器 -->
+                <entry key="logout">
+                    <bean id="logout" class="io.buji.pac4j.filter.LogoutFilter">
+                        <property name="defaultUrl"
+                                  value="http://localhost:8080/callback?client_name=MyCasClient"></property>
+                        <property name="config" ref="authcConfig"></property>
+                        <property name="centralLogout" value="true"></property>
+                        <property name="localLogout" value="false"></property>
+                    </bean>
+                </entry>
+                <entry key="role" value-ref="roleOrFilter"/>
+                <entry key="login">
+                    <bean class="com.study.shiro.client.filter.Redirect2CasLoginFilter"></bean>
+                </entry>
+            </util:map>
+        </property>
+        <property name="filterChainDefinitions">
+            <value>
+                /test/index = casSecurityFilter
+                /callback = callback
+                /index.html = anon
+                /unauthorized.html = anon
+                /login.html = login
+                /user/login.do = anon
+                /user/* = user
+                /test/* = anon
+                /test.html = authc
+                /role.html = role[admin]
+                /logout = logout
+            </value>
+        </property>
+
+    </bean>
+
+    <!-- 生命周期处理 -->
+    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+
+    <bean id="annotationProxy"
+          class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"
+          depends-on="lifecycleBeanPostProcessor">
+        <property name="proxyTargetClass" value="true"/>
+    </bean>
+</beans>
