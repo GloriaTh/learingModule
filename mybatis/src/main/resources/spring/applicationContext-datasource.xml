@@ -21,8 +21,7 @@
         <property name="fileEncoding" value="utf-8"/>
     </bean>
 
-
-    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+    <bean id="mysqlDataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
         <property name="driverClassName" value="${db.driverClassName}"/>
         <property name="url" value="${db.url}"/>
         <property name="username" value="${db.username}"/>
@@ -31,8 +30,6 @@
         <property name="initialSize" value="${db.initialSize}"/>
         <!-- 连接池的最大值 -->
         <property name="maxActive" value="${db.maxActive}"/>
-        <!-- 最大空闲值.当经过一个高峰时间后，连接池可以慢慢将已经用不到的连接慢慢释放一部分，一直减少到maxIdle为止 -->
-        <property name="maxIdle" value="${db.maxIdle}"/>
         <!-- 最小空闲值.当空闲的连接数少于阀值时，连接池就会预申请去一些连接，以免洪峰来时来不及申请 -->
         <property name="minIdle" value="${db.minIdle}"/>
         <!-- 最大建立连接等待时间。如果超过此时间将接到异常。设为－1表示无限制 -->
@@ -55,9 +52,36 @@
         <property name="validationQuery" value="SELECT 1 FROM dual"/>
     </bean>
 
+    <bean id="oracleDataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init"
+          destroy-method="close">
+        <property name="driverClassName" value="${oracle.driverClassName}"/>
+        <property name="url" value="${oracle.url}"/>
+        <property name="username" value="${oracle.username}"/>
+        <property name="password" value="${oracle.password}"/>
+        <property name="initialSize" value="${db.initialSize}"/>
+        <property name="maxActive" value="${db.maxActive}"/>
+        <property name="minIdle" value="${db.minIdle}"/>
+        <property name="maxWait" value="${db.maxWait}"/>
+        <property name="defaultAutoCommit" value="${db.defaultAutoCommit}"/>
+        <property name="minEvictableIdleTimeMillis" value="${db.minEvictableIdleTimeMillis}"/>
+        <property name="timeBetweenEvictionRunsMillis" value="40000"/>
+        <property name="testWhileIdle" value="true"/>
+        <property name="validationQuery" value="SELECT 1 FROM dual"/>
+    </bean>
+
+    <bean id="dynamicDataSource" class="com.study.mybatis.datasource.DynamicDataSource">
+        <property name="targetDataSources">
+            <map>
+                <entry key="mysqlDataSource" value-ref="mysqlDataSource"/>
+                <entry key="oracleDataSource" value-ref="oracleDataSource"/>
+            </map>
+        </property>
+        <property name="defaultTargetDataSource" ref="mysqlDataSource"/>
+    </bean>
+
     <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
         <!-- dataSource bean -->
-        <property name="dataSource" ref="dataSource"/>
+        <property name="dataSource" ref="dynamicDataSource"/>
         <property name="mapperLocations" value="classpath*:mappers/*.xml"/>
     </bean>
 

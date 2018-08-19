@@ -55,6 +55,7 @@
                 /login.html = anon
                 /user/login.do = anon
                 /user/file.do = anon
+                /user/test.do = anon
                 /user/* = user
                 /test.html = anon,test
                 /role.html = role[admin,user],test

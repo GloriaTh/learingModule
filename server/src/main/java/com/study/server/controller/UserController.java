@@ -1,8 +1,9 @@
 package com.study.server.controller;
 
+import com.study.common.pojo.User;
+import com.study.dubbo.mybatis.UserManager;
+import com.study.mybatis.datasource.DbMultiDataSource;
 import com.study.server.exception.GlobalException;
-import io.buji.pac4j.token.Pac4jToken;
-import org.apache.commons.io.FileUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.Subject;
@@ -17,12 +18,20 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
+/**
+ * @author Gloria
+ */
 @Controller
 @RequestMapping("/user/")
 public class UserController {
     @Autowired
+    UserManager userManager;
+    @Autowired
     private ProducerService producerService;
+    @Autowired
+    private DbMultiDataSource multiDataSource;
 
     @RequestMapping(value = "login.do", method = RequestMethod.POST)
     @ResponseBody
@@ -44,7 +53,7 @@ public class UserController {
     @RequestMapping(value = "file.do")
     @ResponseBody
     public void file(MultipartFile file) throws GlobalException {
-        File targetFile = new File(this.getClass().getClassLoader().getResource("/").getPath()+"/download/" + file.getOriginalFilename());
+        File targetFile = new File(this.getClass().getClassLoader().getResource("/").getPath() + "/download/" + file.getOriginalFilename());
         System.out.println(targetFile.getAbsolutePath());
         if (!targetFile.exists()) {
             targetFile.mkdirs();
@@ -68,4 +77,12 @@ public class UserController {
         producerService.sendMessage("World");
     }
 
+
+    @RequestMapping(value = "test.do", method = RequestMethod.GET)
+    @ResponseBody
+    public void test(String sourceName) {
+        multiDataSource.switchDataSource(sourceName);
+        List<User> list = userManager.selectAll();
+        System.out.println(list.toArray().toString());
+    }
 }

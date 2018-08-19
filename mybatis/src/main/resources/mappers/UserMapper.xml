@@ -55,7 +55,7 @@
     select user_name, user_id, user_email, user_phone, user_password, user_pwd_salt, 
     user_state
     from user
-    order by user_id ASC, userCreateDate DESC
+    order by user_id ASC
   </select>
     <select id="selectPassByUserName" parameterType="java.lang.String"  resultType="string">
         SELECT
