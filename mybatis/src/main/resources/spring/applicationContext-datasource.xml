@@ -69,23 +69,47 @@
         <property name="validationQuery" value="SELECT 1 FROM dual"/>
     </bean>
 
-    <bean id="dynamicDataSource" class="com.study.mybatis.datasource.DynamicDataSource">
-        <property name="targetDataSources">
-            <map>
-                <entry key="mysqlDataSource" value-ref="mysqlDataSource"/>
-                <entry key="oracleDataSource" value-ref="oracleDataSource"/>
-            </map>
-        </property>
-        <property name="defaultTargetDataSource" ref="mysqlDataSource"/>
-    </bean>
+    <!--<bean id="dynamicDataSource" class="com.study.mybatis.datasource.DynamicDataSource">-->
+    <!--<property name="targetDataSources">-->
+    <!--<map>-->
+    <!--<entry key="mysqlDataSource" value-ref="mysqlDataSource"/>-->
+    <!--<entry key="oracleDataSource" value-ref="oracleDataSource"/>-->
+    <!--</map>-->
+    <!--</property>-->
+    <!--<property name="defaultTargetDataSource" ref="mysqlDataSource"/>-->
+    <!--</bean>-->
 
-    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+    <!--<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">-->
+    <!--&lt;!&ndash; dataSource bean &ndash;&gt;-->
+    <!--<property name="dataSource" ref="dynamicDataSource"/>-->
+    <!--<property name="mapperLocations" value="classpath*:mappers/*.xml"/>-->
+    <!--</bean>-->
+
+    <bean id="mysqlSqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
         <!-- dataSource bean -->
-        <property name="dataSource" ref="dynamicDataSource"/>
+        <property name="dataSource" ref="mysqlDataSource"/>
         <property name="mapperLocations" value="classpath*:mappers/*.xml"/>
     </bean>
 
+    <bean id="oracleSqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!-- dataSource bean -->
+        <property name="dataSource" ref="oracleDataSource"/>
+        <property name="mapperLocations" value="classpath*:mappers/*.xml"/>
+    </bean>
+
+    <bean id="sessionFactory" class="com.study.mybatis.sessionfactory.DynamicSqlSessionFactoryImpl">
+        <property name="defaultTargetSessionFactory" ref="mysqlSqlSessionFactory"/>
+        <property name="targetSessionFactorys">
+            <map>
+                <entry value-ref="oracleSqlSessionFactory" key="oracleSessionFactory"/>
+                <entry value-ref="mysqlSqlSessionFactory" key="mysqlSqlSessionFactory"/>
+            </map>
+        </property>
+    </bean>
+
+
     <bean name="mapperScannerConfigurer" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
         <property name="basePackage" value="com.study.mybatis.dao"/>
+        <property name="sqlSessionFactoryBeanName" value="sessionFactory"/>
     </bean>
 </beans>

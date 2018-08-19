@@ -3,6 +3,7 @@ package com.study.server.controller;
 import com.study.common.pojo.User;
 import com.study.dubbo.mybatis.UserManager;
 import com.study.mybatis.datasource.DbMultiDataSource;
+import com.study.mybatis.sessionfactory.MultiSessionFactory;
 import com.study.server.exception.GlobalException;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.UsernamePasswordToken;
@@ -30,8 +31,10 @@ public class UserController {
     UserManager userManager;
     @Autowired
     private ProducerService producerService;
+    //    @Autowired
+//    private DbMultiDataSource multiDataSource;
     @Autowired
-    private DbMultiDataSource multiDataSource;
+    MultiSessionFactory multiSessionFactory;
 
     @RequestMapping(value = "login.do", method = RequestMethod.POST)
     @ResponseBody
@@ -81,7 +84,8 @@ public class UserController {
     @RequestMapping(value = "test.do", method = RequestMethod.GET)
     @ResponseBody
     public void test(String sourceName) {
-        multiDataSource.switchDataSource(sourceName);
+//        multiDataSource.switchDataSource(sourceName);
+        multiSessionFactory.switchDataSource(sourceName);
         List<User> list = userManager.selectAll();
         System.out.println(list.toArray().toString());
     }
