@@ -1,5 +1,6 @@
 package com.study.server.controller;
 
+import com.study.common.annotation.DataSource;
 import com.study.common.pojo.User;
 import com.study.dubbo.mybatis.UserManager;
 import com.study.mybatis.datasource.DbMultiDataSource;
@@ -9,6 +10,7 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -26,6 +28,7 @@ import java.util.List;
  */
 @Controller
 @RequestMapping("/user/")
+@EnableAspectJAutoProxy
 public class UserController {
     @Autowired
     UserManager userManager;
@@ -83,9 +86,10 @@ public class UserController {
 
     @RequestMapping(value = "test.do", method = RequestMethod.GET)
     @ResponseBody
+    @DataSource(value = "mysqlSqlSessionFactory")
     public void test(String sourceName) {
 //        multiDataSource.switchDataSource(sourceName);
-        multiSessionFactory.switchDataSource(sourceName);
+//        multiSessionFactory.switchDataSource(sourceName);
         List<User> list = userManager.selectAll();
         System.out.println(list.toArray().toString());
     }

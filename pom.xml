@@ -18,6 +18,4 @@
         <module>activemq</module>
         <module>message</module>
     </modules>
-
-
 </project>

@@ -42,7 +42,7 @@ public class DbMultiDataSource {
         return local.get();
     }
 
-    public int switchDataSource(String dataSourceName) {
+    public int loadDynamicBean(String dataSourceName) {
         if (!dynamicLoadBean.hasBean(dataSourceName)) {
             /* ============== 动态装配DataSource begin ==================*/
             DynamicDataSourceBeanImpl dataSourceBean = new DynamicDataSourceBeanImpl(dataSourceName);
@@ -57,6 +57,11 @@ public class DbMultiDataSource {
         local.set(dataSourceName);
 
         return 0;
+    }
+
+    public static void switchDataSource(String dataSourceName) {
+        // 切换数据源
+        local.set(dataSourceName);
     }
 
     public void remove() {

@@ -7,7 +7,7 @@ import org.springframework.util.StringUtils;
 public class MultiSessionFactory {
     private static ThreadLocal<String> local = new ThreadLocal<String>();
 
-    public int switchDataSource(String dataSourceName) {
+    public static int switchDataSource(String dataSourceName) {
         // 切换数据源
         if (StringUtils.isEmpty(dataSourceName)) {
             return 0;

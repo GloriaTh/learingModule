@@ -101,7 +101,7 @@
         <property name="defaultTargetSessionFactory" ref="mysqlSqlSessionFactory"/>
         <property name="targetSessionFactorys">
             <map>
-                <entry value-ref="oracleSqlSessionFactory" key="oracleSessionFactory"/>
+                <entry value-ref="oracleSqlSessionFactory" key="oracleSqlSessionFactory"/>
                 <entry value-ref="mysqlSqlSessionFactory" key="mysqlSqlSessionFactory"/>
             </map>
         </property>

@@ -24,4 +24,13 @@
     <import resource="applicationContext-shiro-consumer.xml"/>
     <import resource="applicationContext-activemq.xml"/>
 
+    <aop:aspectj-autoproxy proxy-target-class="true"/>
+
+    <!--<bean id="dataSourceAspect" class="com.study.server.aspect.DataSourceAspect"/>-->
+    <!--<aop:config>-->
+        <!--<aop:aspect id="c" ref="dataSourceAspect">-->
+            <!--<aop:pointcut id="tx" expression="execution(* com.apc.cms.service..*.*(..))"/>-->
+            <!--<aop:before pointcut-ref="tx" method="before"/>-->
+        <!--</aop:aspect>-->
+    <!--</aop:config>-->
 </beans>
